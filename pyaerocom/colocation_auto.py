@@ -358,21 +358,42 @@ class Colocator(ColocationSetup):
             self.logging = False
         
         self._write_log('\n\nModel: {}\n'.format(self.model_id))
-        try:
-            if self.obs_id in self.UNGRIDDED_IDS:
-                self.data[self.model_id] = self._run_gridded_ungridded(var_name)
-            else:
-                self.data[self.model_id] = self._run_gridded_gridded(var_name)
-        except Exception:
-            msg = ('Failed to perform analysis: {}\n'
-                   .format(traceback.format_exc()))
-            const.print_log.warning(msg)
-            self._write_log(msg)
-            if self.raise_exceptions:
+        
+        obs_id = self.obs_id
+        if isinstance(obs_id,dict):
+            for variable_name,obsid in obs_id.items():
+                self.obs_id = obsid
+                try:
+                    if self.obs_id in self.UNGRIDDED_IDS:
+                        self.data[self.model_id] = self._run_gridded_ungridded(variable_name)
+                    else:
+                        self.data[self.model_id] = self._run_gridded_gridded(variable_name)
+                except Exception:
+                    msg = ('Failed to perform analysis: {}\n'
+                           .format(traceback.format_exc()))
+                    const.print_log.warning(msg)
+                    self._write_log(msg)
+                    if self.raise_exceptions:
+                        self._close_log()
+                        raise Exception(traceback.format_exc())
+                finally:
+                    self._close_log()
+        else:   
+            try:
+                if self.obs_id in self.UNGRIDDED_IDS:
+                    self.data[self.model_id] = self._run_gridded_ungridded(var_name)
+                else:
+                    self.data[self.model_id] = self._run_gridded_gridded(var_name)
+            except Exception:
+                msg = ('Failed to perform analysis: {}\n'
+                       .format(traceback.format_exc()))
+                const.print_log.warning(msg)
+                self._write_log(msg)
+                if self.raise_exceptions:
+                    self._close_log()
+                    raise Exception(traceback.format_exc())
+            finally:
                 self._close_log()
-                raise Exception(traceback.format_exc())
-        finally:
-            self._close_log()
             
     @staticmethod
     def get_lowest_resolution(ts_type, *ts_types):
