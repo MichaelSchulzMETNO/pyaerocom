@@ -361,8 +361,10 @@ class Colocator(ColocationSetup):
         
         obs_id = self.obs_id
         if isinstance(obs_id,dict):
+            log = self._log
             for variable_name,obsid in obs_id.items():
                 self.obs_id = obsid
+                self._log=log
                 try:
                     if self.obs_id in self.UNGRIDDED_IDS:
                         self.data[self.model_id] = self._run_gridded_ungridded(variable_name)
